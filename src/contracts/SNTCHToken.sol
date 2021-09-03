@@ -19,11 +19,11 @@ contract SNTCHToken is Ownable {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event Locked(address indexed owner, uint256 indexed amount);
 
-	constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 totalSupply_) public {
+	constructor(string memory name_, string memory symbol_, uint256 totalSupply_) public {
 		_name = name_;
         _symbol = symbol_;
         _totalSupply = totalSupply_;
-        _decimals = decimals_;
+        _decimals = 18;
         _balances[msg.sender] = totalSupply_;
 	}
 
