@@ -7,6 +7,7 @@ contract SntchDao is Ownable {
 	
 	using SafeMath for uint256;
 
+	string public name = 'SNTCH DAO';
 	uint256 public whitelistedNumber = 0;
 
 	mapping (address => bool) whitelist;
