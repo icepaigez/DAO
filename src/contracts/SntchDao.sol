@@ -11,7 +11,8 @@ contract SntchDao is Ownable {
 	using SafeMath for uint256;
 
 	string public name = 'SNTCH DAO';
-	uint256 public tokenPriceInWei = 2500000000000000000; //$2.5 in wei
+	uint256 public tokenPriceInWei = 2500000000000000000; //$2.5 in wei int256 (NOT uint256: note the difference because of the chainlink price datatype)
+	uint256 public whitelistedNumber = 0;
 
 	mapping (address => bool) whitelist;
     mapping (address => bool) blacklist;
@@ -23,16 +24,31 @@ contract SntchDao is Ownable {
     	priceFeed = AggregatorV3Interface(_aggregator);
     }
 
-    function getLatestEthPrice() public view returns (int256) {
-    	(uint80 roundID, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
-    	return answer;
+    function getCurrentTokenPrice() public view returns (uint256) {
+    	(,int256 answer, , ,) = priceFeed.latestRoundData();
+    	uint256 price = uint256 (answer);
+    	uint256 minTokenPurchaseInEth = tokenPriceInWei / price;
+    	return minTokenPurchaseInEth;
     }
 
-    function whitelistAddress(address _member) public payable {
+    function whitelistAddress(address _add) public payable {
     	//whitelist the member once sntch tokens have been purchased
+    	require(!whitelist[_add], "Candidate must not be already whitelisted");
+    	require(!blacklist[_add], "Candidate must not be already blacklisted");
+    	require(msg.value >= getCurrentTokenPrice(), "You must have enough for at least one sntch token which is approx. $2.5 worth of Ether");
+    
+    	//buyTokens(_add, msg.value);
+    	whitelist[_add] = true;
+    	whitelistedNumber++;
+    	emit Whitelisted(_add, true);
     }
 
-    function () external payable {
+    fallback () external payable {
     	//fallback function if ether is sent to the DAO without any specific function called
+    	if (!whitelist[msg.sender]) {
+    		whitelistAddress(msg.sender);
+    	} else {
+    		//buyTokens(msg.sender, msg.value);
+    	}
     }
 }
