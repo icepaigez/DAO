@@ -3,10 +3,12 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "./interfaces/SntchTokenInterface.sol";
 
 contract SntchDao is Ownable {
 
 	AggregatorV3Interface internal priceFeed;
+	SntchTokenInterface public sntch;
 	
 	using SafeMath for uint256;
 
@@ -20,8 +22,10 @@ contract SntchDao is Ownable {
     event Whitelisted(address addr, bool status);
     event Blacklisted(address addr, bool status);
 
-    constructor(address _aggregator) public {
+    constructor(address _aggregator, address _sntchTokenAddress) public {
+    	require(_sntchTokenAddress != address(0x0), "Token address cannot be null-address");
     	priceFeed = AggregatorV3Interface(_aggregator);
+    	sntch = SntchTokenInterface(_sntchTokenAddress);
     }
 
     function getCurrentTokenPrice() public view returns (uint256) {
