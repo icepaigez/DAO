@@ -6,7 +6,8 @@ require('dotenv').config();
 const mnemonic = process.env.MNEMONIC;
 const endpointUrl = `wss://kovan.infura.io/ws/v3/${process.env.WEB3_INFURA_PROJECT_ID}`
 const etherscanToken = process.env.ETHERSCAN_TOKEN;
-const maticEndPoint = `https://polygon-mumbai.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`
+const maticEndPoint = `https://rpc-mumbai.maticvigil.com/v1/${process.env.MATIC_ID}`
+const polygonscanToken = process.env.POLYGONSCAN_TOKEN
 
 module.exports = {
   networks: {
@@ -39,8 +40,6 @@ module.exports = {
       confirmations: 2,
       timeoutBlocks: 200,
       skipDryRun: true,
-      gas: 6000000,
-      gasPrice: 10000000000
     }
   },
   contracts_directory: './src/contracts/',
@@ -56,7 +55,8 @@ module.exports = {
   },
   plugins: ['truffle-plugin-verify'],
   api_keys: {
-    etherscan: etherscanToken
+    etherscan: etherscanToken,
+    polygonscan: polygonscanToken
   }
 }
 //truffle run verify Contract --network kovan : to verify the smart contracts on etherscan
