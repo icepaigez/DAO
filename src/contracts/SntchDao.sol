@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./interfaces/SntchTokenInterface.sol";
 
-contract SntchDao is Ownable {
+contract SntchDao {
 
 	AggregatorV3Interface internal priceFeed;
 	SntchTokenInterface public sntch;
@@ -21,6 +21,7 @@ contract SntchDao is Ownable {
 
     event Whitelisted(address addr, bool status);
     event Blacklisted(address addr, bool status);
+    event TokenAddressChange(address token);
 
     constructor(address _aggregator, address _sntchTokenAddress) public {
     	require(_sntchTokenAddress != address(0x0), "Token address cannot be null-address");
