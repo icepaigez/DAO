@@ -6,3 +6,5 @@ Actions
 *Proposal types need to be defined by the sntch team before it is encoded in
 the smart contract
 *only 1 token is the minimum requirement for voting; tokens are locked during voting and voting is for a certain period e.g 24-48 hrs
+86027370049
+123456
