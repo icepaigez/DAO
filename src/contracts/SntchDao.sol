@@ -16,6 +16,7 @@ contract SntchDao is Ownable {
 	uint256 public sntchTokenPrice = 250000000000000000000000000; //$2.5/token * 10**8(from chainlink eth/usd price) *10**18(toWei)  
 	uint256 public whitelistedNumber = 0;
 	uint public today; //time when voting on a proposal must have ended
+	bytes32[] public proposalIndex;
 
 	struct Proposal {
 		uint256 index;
@@ -30,12 +31,13 @@ contract SntchDao is Ownable {
 	mapping (address => bool) whitelist;
     mapping (address => bool) blacklist;
     mapping (bytes32 => Proposal) public proposals;
-    bytes32[] public proposalIndex;
+    mapping (address => uint256) public deletions;
 
     event Whitelisted(address addr, bool status);
     event Blacklisted(address addr, bool status);
     event TokenAddressChange(address token);
     event ProposalCreated(uint256 index, string name, address initiator);
+    event ProposalDeleted(uint256 index, string name, address initiator);
 
     constructor(address _aggregator, address _sntchTokenAddress) public {
     	require(_sntchTokenAddress != address(0x0), "Token address cannot be a null-address");
@@ -109,16 +111,25 @@ contract SntchDao is Ownable {
     	return proposals[hash].exists;
     }
 
-    function getProposal(bytes32 hash) public view returns (string memory name, address payable initiator, string memory proposalURI) {
+    function getProposal(bytes32 hash) public view returns (string memory proposalName, address payable initiator, string memory proposalURI) {
     	return (proposals[hash].name, proposals[hash].initiator, proposals[hash].proposalURI);
     }
 
-    function getAllProposalHashes() public view returns (bytes32[]) {
+    function getAllProposalHashes() public view returns (bytes32[] memory) {
     	return proposalIndex;
     }
 
     function getProposalCount() public view returns (uint256) {
     	return proposalIndex.length;
+    }
+
+    function deleteProposal(bytes32 hash) internal {
+    	require(proposalExists(hash), "Proposal must exist to be deletable.");
+    	Proposal storage propose = proposals[hash];
+
+    	propose.exists = false;
+    	deletions[proposals[hash].initiator] += 1;
+    	emit ProposalDeleted(propose.index, propose.name, propose.initiator);
     }
 }
 
