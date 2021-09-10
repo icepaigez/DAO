@@ -35,6 +35,10 @@ contract SNTCHToken is Ownable {
         return _symbol;
     }
 
+    function decimals() public view returns (uint8) {
+        return _decimals;
+    }
+
 	function balanceOf(address _owner) public view returns (uint256) {
 		return _balances[_owner];
 	}
@@ -72,6 +76,7 @@ contract SNTCHToken is Ownable {
     	_balances[_to] = _balances[_to].add(_value);
     	_allowance[_from][msg.sender] = _allowance[_from][msg.sender].sub(_value);
     	emit Transfer(_from, _to, _value);
+        return true;
     }
 
     function increaseAllowance(address _spender, uint256 _addedValue) public returns (bool) {

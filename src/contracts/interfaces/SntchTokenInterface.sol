@@ -6,6 +6,7 @@ interface SntchTokenInterface {
     event Locked(address indexed owner, uint256 indexed amount);
 
     function name() external view returns (string memory);
+    function decimals() external view returns (uint8);
     function symbol() external view returns (string memory);
     function balanceOf(address _owner) external view returns (uint256);
     function totalSupply() external view returns (uint256);
