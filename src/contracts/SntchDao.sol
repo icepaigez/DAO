@@ -23,7 +23,7 @@ contract SntchDao is Ownable {
 	    address payable initiator;
 	    uint256 votes;
 	    uint256 end;
-	    string contentURI;
+	    string proposalURI;
 	    bool exists;
   	}
 
@@ -94,15 +94,31 @@ contract SntchDao is Ownable {
     	emit TokenAddressChange(_newToken);
     }
 
-    function createProposal(string memory _name, address payable _initiator, string memory _contentURI, uint256 _endTime) public onlyMembers {
+    function createProposal(string memory _name, address payable _initiator, string memory _proposalURI, uint256 _endTime) public onlyMembers {
     	today = block.timestamp;
-    	bytes32 hash = keccak256(abi.encodePacked(_name, _contentURI, block.number));
+    	bytes32 hash = keccak256(abi.encodePacked(_name, _proposalURI, block.number));
     	proposalIndex.push(hash);
     	require(!proposals[hash].exists, "Proposal must not already exist in same block!");
     	uint256 proposalEndTime = today + _endTime; //endtime can be in days or minutes or years
     	uint256 id = proposalIndex.length - 1;
-    	proposals[hash] = Proposal(id, _name, _initiator, 0, proposalEndTime, _contentURI, true);
+    	proposals[hash] = Proposal(id, _name, _initiator, 0, proposalEndTime, _proposalURI, true);
     	emit ProposalCreated(proposals[hash].index, proposals[hash].name, proposals[hash].initiator);
+    }
+
+    function proposalExists(bytes32 hash) public view returns (bool) {
+    	return proposals[hash].exists;
+    }
+
+    function getProposal(bytes32 hash) public view returns (string memory name, address payable initiator, string memory proposalURI) {
+    	return (proposals[hash].name, proposals[hash].initiator, proposals[hash].proposalURI);
+    }
+
+    function getAllProposalHashes() public view returns (bytes32[]) {
+    	return proposalIndex;
+    }
+
+    function getProposalCount() public view returns (uint256) {
+    	return proposalIndex.length;
     }
 }
 
