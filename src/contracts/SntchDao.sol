@@ -15,6 +15,7 @@ contract SntchDao is Ownable {
 	string public name = 'SNTCH DAO';
 	uint256 public sntchTokenPrice = 250000000000000000000000000; //$2.5/token * 10**8(from chainlink eth/usd price) *10**18(toWei)  
 	uint256 public whitelistedNumber = 0;
+	uint256 public reserveTokens = 60000000 * 10**18;
 
  	struct Proposal {
  		string description;
@@ -39,8 +40,6 @@ contract SntchDao is Ownable {
 
 	mapping (address => bool) whitelist;
     mapping (address => bool) blacklist;
-    // mapping (bytes32 => Proposal) public proposals;
-    // mapping (address => uint256) public deletions;
 
     event Whitelisted(address addr, bool status);
     event Blacklisted(address addr, bool status);
@@ -72,6 +71,7 @@ contract SntchDao is Ownable {
     function buyTokens(address _buyer) public payable {
     	// require(!whitelist[_buyer], "Candidate must not be already whitelisted");
     	require(!blacklist[_buyer], "Candidate must not be already blacklisted");
+    	require(daoTokenBalance() == reserveTokens, "Please buy tokens from an exchange");
 
     	uint256 minTokenPurchaseInEth = getCurrentTokenPrice();
     	require(msg.value >= minTokenPurchaseInEth, "You must send enough Ether for at least one sntch token which is approx. $2.5 worth of Ether");
@@ -90,10 +90,10 @@ contract SntchDao is Ownable {
     }
 
 
-    fallback() external payable {
-    	//fallback function if ether is sent to the DAO without any specific function called
-    	buyTokens(msg.sender);
-    }
+    // fallback() external payable {
+    // 	//fallback function if ether is sent to the DAO without any specific function called
+    // 	buyTokens(msg.sender);
+    // }
 
     function daoTokenBalance() public view returns (uint256) {
     	return sntch.balanceOf(address(this));
@@ -160,42 +160,33 @@ contract SntchDao is Ownable {
     	emit ProposalExecuted(_proposalId);
     }
 
+    function blacklistAddress(address _offender) internal {
+	    require(blacklist[_offender] == false, "Can't blacklist a blacklisted user :/");
+	    blacklist[_offender] == true;
+	    sntch.increaseLockedAmount(_offender, sntch.getUnlockedAmount(_offender));
+	    emit Blacklisted(_offender, true);
+	}
+
+	function unblacklistMe() payable public {
+	    unblacklistAddress(msg.sender);
+	}
+
+	function unblacklistAddress(address _offender) payable public {
+	    require(msg.value >= 0.01 ether, "Unblacklisting fee");
+	    require(blacklist[_offender] == true, "Can't unblacklist a non-blacklisted user :/");
+	    require(notVoting(_offender), "Offender must not be involved in a vote.");
+	    blacklist[_offender] = false;
+	    sntch.decreaseLockedAmount(_offender, sntch.balanceOf(_offender));
+	    emit Blacklisted(_offender, false);
+	}
    
-
-    // function createProposal(string memory _name, address payable _initiator, string memory _proposalURI, uint256 _endTime) public onlyMembers {
-    // 	today = block.timestamp;
-    // 	bytes32 hash = keccak256(abi.encodePacked(_name, _proposalURI, block.number));
-    // 	proposalIndex.push(hash);
-    // 	require(!proposals[hash].exists, "Proposal must not already exist in same block!");
-    // 	uint256 proposalEndTime = today + _endTime; //endtime can be in days or minutes or years
-    // 	uint256 id = proposalIndex.length - 1;
-    // 	proposals[hash] = Proposal(id, _name, _initiator, 0, proposalEndTime, _proposalURI, true);
-    // 	emit ProposalCreated(proposals[hash].index, proposals[hash].name, proposals[hash].initiator);
-    // }
-
-    // function proposalExists(bytes32 hash) public view returns (bool) {
-    // 	return proposals[hash].exists;
-    // }
-
-    // function getProposal(bytes32 hash) public view returns (string memory proposalName, address payable initiator, string memory proposalURI) {
-    // 	return (proposals[hash].name, proposals[hash].initiator, proposals[hash].proposalURI);
-    // }
-
-    // function getAllProposalHashes() public view returns (bytes32[] memory) {
-    // 	return proposalIndex;
-    // }
-
-    // function getProposalCount() public view returns (uint256) {
-    // 	return proposalIndex.length;
-    // }
-
-    // function deleteProposal(bytes32 hash) internal {
-    // 	require(proposalExists(hash), "Proposal must exist to be deletable.");
-    // 	Proposal storage propose = proposals[hash];
-
-    // 	propose.exists = false;
-    // 	deletions[proposals[hash].initiator] += 1;
-    // 	emit ProposalDeleted(propose.index, propose.name, propose.initiator);
-    // }
+   function notVoting(address _voter) internal view returns (bool) {
+	    for (uint256 i = 0; i < proposalCount; i++) {
+	        if (proposals[i].executed == false && proposals[i].voters[_voter] == true) {
+	            return false;
+	        }
+	    }
+	    return true;
+	}
 }
 
