@@ -15,25 +15,11 @@ contract SntchDao is Ownable {
 	string public name = 'SNTCH DAO';
 	uint256 public sntchTokenPrice = 250000000000000000000000000; //$2.5/token * 10**8(from chainlink eth/usd price) *10**18(toWei)  
 	uint256 public whitelistedNumber = 0;
-	uint public today; //time when voting on a proposal must have ended
-	//bytes32[] public proposalIndex;
-
-	// struct Proposal {
-	// 	uint256 index;
-	//     string name;
-	//     address payable initiator;
-	//     uint256 votes;
-	//     uint256 end;
-	//     string proposalURI;
-	//     bool exists;
- //  	}
 
  	struct Proposal {
  		string description;
  		bool executed;
  		int256 currentResult;
- 		uint8 typeFlag; //1 = delete
- 		bytes32 target;
  		uint256 creationDate;
  		uint256 deadline;
  		mapping (address => bool) voters;
@@ -59,7 +45,7 @@ contract SntchDao is Ownable {
     event Whitelisted(address addr, bool status);
     event Blacklisted(address addr, bool status);
     event TokenAddressChange(address token);
-    event ProposalCreated(uint256 id, uint8 typeFlag, bytes32 hash, string description, address initiator);
+    event ProposalCreated(uint256 id, string description, address initiator);
     event ProposalExecuted(uint256 id);
     event Voted(address voter, bool vote, uint256 power, string justification);
 
@@ -130,7 +116,7 @@ contract SntchDao is Ownable {
     	require(p.deadline > block.timestamp, "Proposal must not have expired.");
     	require(p.voters[msg.sender] == false, "User must not have already voted.");
 
-    	uint256 voteId = p.votes.length - 1;
+    	uint256 voteId = p.votes.length;
     	Vote storage pvote = p.votes[voteId];
     	pvote.inSupport = _vote;
     	pvote.justification = _description;
@@ -145,6 +131,36 @@ contract SntchDao is Ownable {
    		emit Voted(msg.sender, _vote, _votePower, _description);
    		return p.currentResult;
     }
+
+    function createProposal(string memory _description, uint256 _endTime) public onlyMembers {
+    	uint256 proposalId = proposals.length;
+    	Proposal storage p = proposals[proposalId];
+    	p.description = _description;
+    	p.executed = false;
+    	p.creationDate = block.timestamp;
+    	p.deadline = p.creationDate + _endTime; //endtime can be in minutes, days, hours, years, etc
+    	p.initiator = msg.sender;
+
+    	emit ProposalCreated(proposalId, _description, msg.sender);
+    	proposalCount = proposalId + 1;
+    }
+
+    function executeProposal(uint256 _proposalId) public {
+    	Proposal storage p = proposals[_proposalId];
+    	require(!p.executed && block.timestamp >= p.deadline);
+    	uint256 quorum = (51 * whitelistedNumber) / 100;
+    	require(p.votes.length >= quorum && p.currentResult >= 100); //at least 100 tokens needed to execute a proposal
+    
+    	uint256 voteCount = p.votes.length;
+    	for (uint i = 0; i < voteCount; i++) {
+    		sntch.decreaseLockedAmount(p.votes[i].voter, p.votes[i].power);
+    	}
+
+    	p.executed = true;
+    	emit ProposalExecuted(_proposalId);
+    }
+
+   
 
     // function createProposal(string memory _name, address payable _initiator, string memory _proposalURI, uint256 _endTime) public onlyMembers {
     // 	today = block.timestamp;
