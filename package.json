@@ -1,7 +1,7 @@
 {
-  "name": "",
+  "name": "SNTCH-DAO",
   "version": "0.0.1",
-  "description": "",
+  "description": "A Decentralized Autonomous Organization for Annoymous Crime Data Crowdsourcing",
   "author": "icepaigez@gmail.com",
   "dependencies": {
     "@chainlink/contracts": "^0.2.1",
