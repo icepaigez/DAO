@@ -40,6 +40,7 @@ contract SntchDao is Ownable {
 
 	mapping (address => bool) whitelist;
     mapping (address => bool) blacklist;
+    mapping (address => uint256) stray;
 
     event Whitelisted(address addr, bool status);
     event Blacklisted(address addr, bool status);
@@ -89,8 +90,10 @@ contract SntchDao is Ownable {
     	}
     }
 
-
-    fallback() external payable {} //fallback function if ether is sent to the DAO without any specific
+    //fallback function if ether is sent to the DAO without any specific function called
+    fallback() external payable {
+    	stray[msg.sender] = msg.value;
+    } 
 
     function daoTokenBalance() public view returns (uint256) {
     	return sntch.balanceOf(address(this));
