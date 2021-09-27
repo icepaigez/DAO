@@ -90,10 +90,7 @@ contract SntchDao is Ownable {
     }
 
 
-    // fallback() external payable {
-    // 	//fallback function if ether is sent to the DAO without any specific function called
-    // 	buyTokens(msg.sender);
-    // }
+    fallback() external payable {} //fallback function if ether is sent to the DAO without any specific
 
     function daoTokenBalance() public view returns (uint256) {
     	return sntch.balanceOf(address(this));
