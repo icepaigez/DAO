@@ -13,9 +13,10 @@ contract SntchDao is Ownable {
 	using SafeMath for uint256;
 
 	string public name = 'SNTCH DAO';
-	uint256 public sntchTokenPrice = 250000000000000000000000000; //$2.5/token * 10**8(from chainlink eth/usd price) *10**18(toWei)  
+	//uint256 public sntchTokenPrice = 250000000000000000000000000; //moved offchain  
 	uint256 public whitelistedNumber = 0;
-	uint256 public reserveTokens = 60000000 * 10**18;
+	uint256 public reserveTokens = 60000000;
+	uint256 public sellableTokens = 40000000;
 
  	struct Proposal {
  		string description;
@@ -62,29 +63,27 @@ contract SntchDao is Ownable {
     	_;
     }
 
-    function getCurrentTokenPrice() public view returns (uint256) {
+    function getCurrentEthPrice() public view returns (int256) {
     	(,int256 answer, , ,) = priceFeed.latestRoundData();
-    	uint256 price = uint256(answer);
-    	uint256 minTokenPurchaseInEth = sntchTokenPrice / price;
-    	return minTokenPurchaseInEth;
+    	return answer;
     }
 
-    function buyTokens(address _buyer) public payable {
+    function buyTokens(address _buyer, uint256 tokenPrice) public payable {
     	// require(!whitelist[_buyer], "Candidate must not be already whitelisted");
     	require(!blacklist[_buyer], "Candidate must not be already blacklisted");
-    	require(daoTokenBalance() == reserveTokens, "Please buy tokens from an exchange");
+    	require(sellableTokens > 0, "Please buy tokens from an exchange");
 
-    	uint256 minTokenPurchaseInEth = getCurrentTokenPrice();
-    	require(msg.value >= minTokenPurchaseInEth, "You must send enough Ether for at least one sntch token which is approx. $2.5 worth of Ether");
-    	uint256 tokensToPurchase = msg.value / minTokenPurchaseInEth;
-    	if (daoTokenBalance() >= tokensToPurchase) {
+    	require(msg.value >= tokenPrice, "You must send enough Ether for at least one sntch token which is approx. $2.5 worth of Ether");
+    	uint256 tokensToPurchase = msg.value / tokenPrice;
+    	if (sellableTokens < tokensToPurchase) {
     		address payable sender = payable(msg.sender);
     		sender.transfer(msg.value);
     	} else {
-    		sntch.transfer(_buyer, tokensToPurchase);
+    		sntch.transfer(_buyer, tokensToPurchase*10**sntch.decimals());
     		if (!whitelist[_buyer]) {
     			whitelist[_buyer] = true;
 	    		whitelistedNumber++;
+	    		sellableTokens = sellableTokens.sub(tokensToPurchase);
     		}
 	    	emit Whitelisted(_buyer, true);
     	}
@@ -94,6 +93,8 @@ contract SntchDao is Ownable {
     fallback() external payable {
     	stray[msg.sender] = msg.value;
     } 
+
+    receive() external payable {}
 
     function daoTokenBalance() public view returns (uint256) {
     	return sntch.balanceOf(address(this));
@@ -190,3 +191,6 @@ contract SntchDao is Ownable {
 	}
 }
 
+
+ 
+ 

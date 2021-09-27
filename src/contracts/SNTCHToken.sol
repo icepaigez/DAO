@@ -25,7 +25,7 @@ contract SNTCHToken is Ownable {
         _totalSupply = totalSupply_;
         _decimals = 18;
         _balances[msg.sender] = totalSupply_;
-	}
+	} 
 
 	function name() public view returns (string memory) {
         return _name;
