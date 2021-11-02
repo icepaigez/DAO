@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -12,11 +13,10 @@ contract SntchDao is Ownable {
 	
 	using SafeMath for uint256;
 
-	string public name = 'SNTCH DAO';
-	//uint256 public sntchTokenPrice = 250000000000000000000000000; //moved offchain  
+	string public name = 'SNTCH DAO';  
 	uint256 public whitelistedNumber = 0;
 	uint256 public reserveTokens = 60000000;
-	uint256 public sellableTokens = 40000000;
+	uint256 public sellableTokens = 40000000; //40m sntch tokens
 
  	struct Proposal {
  		string description;
@@ -50,7 +50,7 @@ contract SntchDao is Ownable {
     event ProposalExecuted(uint256 id);
     event Voted(address voter, bool vote, uint256 power, string justification);
 
-    constructor(address _aggregator, address _sntchTokenAddress) public {
+    constructor(address _aggregator, address _sntchTokenAddress) {
     	require(_sntchTokenAddress != address(0x0), "Token address cannot be a null-address");
     	priceFeed = AggregatorV3Interface(_aggregator);
     	sntch = SntchTokenInterface(_sntchTokenAddress);

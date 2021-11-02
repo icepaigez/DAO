@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -19,7 +20,7 @@ contract SNTCHToken is Ownable {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event Locked(address indexed owner, uint256 indexed amount);
 
-	constructor(string memory name_, string memory symbol_, uint256 totalSupply_) public {
+	constructor(string memory name_, string memory symbol_, uint256 totalSupply_) {
 		_name = name_;
         _symbol = symbol_;
         _totalSupply = totalSupply_;
